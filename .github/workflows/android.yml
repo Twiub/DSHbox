@@ -13,11 +13,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Unzip project
-        run: |
-          unzip -q DSHBox-1.4.0-patched.zip -d src
-          G=$(find src -name gradlew -type f | head -1)
-          [ -n "$G" ] || { echo "gradlew not found in zip"; find src -maxdepth 3 | head -50; exit 1; }
-          echo "PROJECT_DIR=$(dirname "$G")" >> "$GITHUB_ENV"
+        run: unzip -q DSHBox-1.4.0-patched.zip -d src
 
       - uses: actions/setup-java@v4
         with:
@@ -32,12 +28,15 @@ jobs:
           packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
       - name: Build APK
+        working-directory: src/DSHBox-1.4.0
         run: |
-          cd "$PROJECT_DIR"
           chmod +x gradlew
-          ./gradlew assembleRelease -x test
+          ./gradlew :app:assembleRelease -x test
+
+      - name: Show APKs
+        run: find src -name "*.apk"
 
       - uses: actions/upload-artifact@v4
         with:
           name: DSHBox-apk
-          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/*.apk
+          path: src/DSHBox-1.4.0/app/build/outputs/apk/release/*.apk
