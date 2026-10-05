@@ -12,15 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Locate project
+      - name: Unzip project
         run: |
-          G=$(find . -name gradlew -type f | head -1)
-          if [ -z "$G" ]; then
-            echo "gradlew NOT FOUND. Repo contents:"
-            find . -maxdepth 3 -not -path './.git/*' | head -80
-            exit 1
-          fi
-          echo "Found: $G"
+          unzip -q DSHBox-1.4.0-patched.zip -d src
+          G=$(find src -name gradlew -type f | head -1)
+          [ -n "$G" ] || { echo "gradlew not found in zip"; find src -maxdepth 3 | head -50; exit 1; }
           echo "PROJECT_DIR=$(dirname "$G")" >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v4
