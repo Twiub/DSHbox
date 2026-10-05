@@ -9,11 +9,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    defaults:
-      run:
-        working-directory: DSHBox-1.4.0
     steps:
       - uses: actions/checkout@v4
+
+      - name: Locate project
+        run: |
+          G=$(find . -name gradlew -type f | head -1)
+          if [ -z "$G" ]; then
+            echo "gradlew NOT FOUND. Repo contents:"
+            find . -maxdepth 3 -not -path './.git/*' | head -80
+            exit 1
+          fi
+          echo "Found: $G"
+          echo "PROJECT_DIR=$(dirname "$G")" >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v4
         with:
@@ -27,12 +35,13 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
-      - run: chmod +x gradlew
-
       - name: Build APK
-        run: ./gradlew assembleRelease -x test
+        run: |
+          cd "$PROJECT_DIR"
+          chmod +x gradlew
+          ./gradlew assembleRelease -x test
 
       - uses: actions/upload-artifact@v4
         with:
           name: DSHBox-apk
-          path: DSHBox-1.4.0/app/build/outputs/apk/release/*.apk
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/*.apk
