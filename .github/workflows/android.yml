@@ -15,6 +15,16 @@ jobs:
       - name: Unzip project
         run: unzip -q DSHBox-1.4.0-patched.zip -d src
 
+      - name: Fetch runtime assets from official release
+        run: |
+          curl -fL --retry 3 -o official.apk \
+            https://github.com/WSK-build/DSHBox/releases/download/v1.4.0/dshbox-v1.4.0-release.apk
+          mkdir -p official src/runtime/android-assets
+          unzip -q official.apk 'assets/dsh/*' 'assets/runtime/*' -d official
+          mv official/assets/dsh official/assets/runtime src/runtime/android-assets/
+          find src/runtime/android-assets -type f | head
+          rm -f official.apk
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -34,7 +44,7 @@ jobs:
           ./gradlew :app:assembleRelease -x test
 
       - name: Show APKs
-        run: find src -name "*.apk"
+        run: find src -name "*.apk" -exec ls -la {} \;
 
       - uses: actions/upload-artifact@v4
         with:
